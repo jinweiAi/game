@@ -1,0 +1,2681 @@
+  q q q q q q q q<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>森林冰火人（双人闯关）</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+
+    :root{
+      --bg1:#071018;
+      --bg2:#0b1f2b;
+      --card:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.88);
+      --muted:rgba(255,255,255,.55);
+      --good:#4ade80;
+      --bad:#fb7185;
+      --fire:#ff6b6b;
+      --water:#4ea8de;
+      --wood:#2a2a2a;
+      --stone:#1f2937;
+      --lava:#ff3b30;
+      --pool:#3b82f6;
+      --gemFire:#ffd166;
+      --gemWater:#a78bfa;
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(1200px 600px at 20% 30%, rgba(255,107,107,.12), transparent 60%),
+                  radial-gradient(900px 500px at 80% 70%, rgba(78,168,222,.12), transparent 60%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      font-family: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color:var(--text);
+      overflow:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(34,197,94,.12) 0%, transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(168,85,247,.10) 0%, transparent 45%);
+      pointer-events:none;
+    }
+
+    .wrap{
+      width:min(980px, 96vw);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      position:relative;
+      z-index:1;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .brand{
+      display:flex;
+      align-items:baseline;
+      gap:12px;
+    }
+    .brand h1{
+      font-size:1.55rem;
+      letter-spacing:.08em;
+      font-weight:800;
+      background: linear-gradient(90deg, var(--fire), #ffd166, var(--water));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .brand .sub{
+      font-size:.85rem;
+      color:var(--muted);
+      letter-spacing:.18em;
+      text-transform:uppercase;
+    }
+
+    .hud{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 18px 40px -18px rgba(0,0,0,.55);
+      font-size:.92rem;
+      color:rgba(255,255,255,.78);
+    }
+    .pill strong{ color:#fff; font-weight:800; }
+    .hpbar{
+      width: 110px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      overflow: hidden;
+      position: relative;
+    }
+    .hpbar > i{
+      display:block;
+      height:100%;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(34,197,94,.95), rgba(250,204,21,.95), rgba(248,113,113,.95));
+      transform-origin: left center;
+    }
+    .hptext{
+      font-size: .85rem;
+      color: rgba(255,255,255,.82);
+      min-width: 64px;
+      text-align: right;
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+    .pill.btnlike{
+      cursor:pointer;
+      user-select:none;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .pill.btnlike:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.16);
+    }
+    .pill.btnlike:active{ transform: translateY(0); }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      display:inline-block;
+    }
+    .dot.fire{ background:var(--fire); box-shadow:0 0 14px rgba(255,107,107,.45); }
+    .dot.water{ background:var(--water); box-shadow:0 0 14px rgba(78,168,222,.45); }
+
+    .stage{
+      position:relative;
+      border-radius:18px;
+      padding:14px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 25px 55px -18px rgba(0,0,0,.65);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    canvas{
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.10);
+      image-rendering: pixelated;
+      outline:none;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:14px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,.50);
+      border:1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding:18px;
+      text-align:center;
+    }
+    .overlay.hidden{ display:none; }
+    .card{
+      width:min(560px, 92%);
+      padding:24px 22px;
+      border-radius:18px;
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 25px 60px -25px rgba(0,0,0,.65);
+    }
+    .card h2{
+      font-size:1.5rem;
+      font-weight:800;
+      letter-spacing:.06em;
+      margin-bottom:10px;
+    }
+    .card p{
+      color:rgba(255,255,255,.70);
+      line-height:1.7;
+      margin-bottom:14px;
+      font-size:.95rem;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin:14px 0 18px;
+    }
+    .kbd{
+      border-radius:14px;
+      padding:12px 12px;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      text-align:left;
+      font-size:.92rem;
+      color:rgba(255,255,255,.78);
+    }
+    .kbd strong{ color:#fff; }
+    .btnrow{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:8px;
+    }
+    .btn{
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 18px;
+      font-weight:800;
+      letter-spacing:.08em;
+      color:#081016;
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .btn.primary{
+      background: linear-gradient(135deg, #22c55e, #06b6d4);
+      box-shadow: 0 12px 28px rgba(34,197,94,.22);
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      color: rgba(255,255,255,.92);
+    }
+    .btn:hover{ transform: translateY(-2px); filter: brightness(1.03); }
+    .btn:active{ transform: translateY(0); }
+
+    .hint{
+      font-size:.9rem;
+      color:rgba(255,255,255,.55);
+      text-align:center;
+    }
+    .hint code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: rgba(0,0,0,.25);
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.82);
+    }
+
+    /* 关卡选择 & 设置 */
+    .overlay .card.wide{
+      width: min(760px, 96%);
+    }
+    .level-grid{
+      display:grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+    .level-group-title{
+      margin-top:10px;
+      margin-bottom:6px;
+      font-weight:800;
+      letter-spacing:.08em;
+      color:rgba(255,255,255,.82);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:center;
+    }
+    .badge{
+      padding:3px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      font-size:.78rem;
+      color:rgba(255,255,255,.70);
+    }
+    .level-btn{
+      border:none;
+      cursor:pointer;
+      border-radius:12px;
+      padding:12px 0;
+      font-weight:900;
+      letter-spacing:.06em;
+      color:rgba(255,255,255,.92);
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .level-btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.11);
+      border-color: rgba(255,255,255,.18);
+    }
+    .level-btn.easy{ box-shadow: 0 10px 22px -18px rgba(34,197,94,.35); }
+    .level-btn.normal{ box-shadow: 0 10px 22px -18px rgba(6,182,212,.35); }
+    .level-btn.hard{ box-shadow: 0 10px 22px -18px rgba(249,115,22,.35); }
+    .level-btn.hell{ box-shadow: 0 10px 22px -18px rgba(248,113,113,.40); }
+    .settings-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:14px;
+      padding:14px 14px;
+      border-radius:16px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .settings-row .label{
+      text-align:left;
+      min-width: 170px;
+      color:rgba(255,255,255,.78);
+    }
+    .settings-row .label strong{ color:#fff; }
+    input[type="range"]{
+      width: min(360px, 72vw);
+      accent-color: #22c55e;
+    }
+    .value-pill{
+      min-width: 64px;
+      text-align:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      font-weight:900;
+      color:#fff;
+    }
+
+    /* 登录/注册 + 商店 */
+    .auth-card{
+      width:min(520px, 94%);
+    }
+    #authPage{
+      min-height: 100vh;
+      width: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 28px 16px;
+    }
+    #authPage.hidden{ display:none; }
+    #gamePage.hidden{ display:none; }
+    .tabs{
+      display:flex;
+      gap:0;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 4px;
+      margin: 14px 0 14px;
+    }
+    .tabs button{
+      flex:1;
+      border:none;
+      cursor:pointer;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: transparent;
+      color: rgba(255,255,255,.65);
+      font-weight: 900;
+      letter-spacing: .08em;
+      transition: all .18s ease;
+    }
+    .tabs button.active{
+      background: linear-gradient(135deg, rgba(34,197,94,.7), rgba(6,182,212,.55));
+      color:#071018;
+      box-shadow: 0 12px 26px -18px rgba(34,197,94,.5);
+    }
+    .form{
+      display:none;
+      text-align:left;
+      margin-top: 8px;
+    }
+    .form.active{ display:block; }
+    .form label{
+      display:block;
+      margin: 10px 0 6px;
+      font-size:.82rem;
+      color: rgba(255,255,255,.70);
+      letter-spacing: .08em;
+    }
+    .form input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      color: rgba(255,255,255,.92);
+      outline: none;
+    }
+    .form input:focus{
+      border-color: rgba(34,197,94,.45);
+      box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+    }
+    .msg{
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: .88rem;
+      text-align:center;
+    }
+    .msg.error{ color: rgba(248,113,113,.95); }
+    .msg.ok{ color: rgba(74,222,128,.95); }
+    .mini{
+      font-size:.85rem;
+      color: rgba(255,255,255,.60);
+    }
+    .shop-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .shop-grid.three{
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    @media (max-width: 860px){
+      .shop-grid.three{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px){
+      .shop-grid.three{ grid-template-columns: 1fr; }
+    }
+    .item{
+      padding: 14px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      text-align:left;
+    }
+    .item .title{
+      font-weight: 900;
+      letter-spacing: .06em;
+      margin-bottom: 6px;
+    }
+    .item .desc{ color: rgba(255,255,255,.65); font-size:.88rem; line-height:1.5; }
+    .item .price{ margin-top: 10px; font-weight: 900; color: rgba(250,204,21,.92); }
+    .item .actions{ margin-top: 10px; display:flex; gap:10px; flex-wrap:wrap; }
+    .btn.small{ padding:10px 12px; border-radius:12px; font-size:.9rem; }
+    .btn.gold{
+      background: linear-gradient(135deg, rgba(250,204,21,.95), rgba(249,115,22,.85));
+      box-shadow: 0 12px 28px -18px rgba(250,204,21,.55);
+      color:#071018;
+    }
+
+    /* 游戏主页 */
+    #homeScreen{
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+    #homeScreen.hidden{ display:none; }
+    .home-grid{
+      display:grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px){
+      .home-grid{ grid-template-columns: 1fr; }
+    }
+    .panel{
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 25px 55px -18px rgba(0,0,0,.55);
+    }
+    .panel h2{
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+    .panel p{
+      color: rgba(255,255,255,.65);
+      font-size: .92rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    #playArea.hidden{ display:none; }
+  </style>
+</head>
+<body>
+  <section id="authPage">
+    <div class="wrap" style="width:min(760px, 96vw);">
+      <div class="topbar" style="justify-content:center;">
+        <div class="brand" style="justify-content:center;">
+          <h1>森林冰火人</h1>
+          <div class="sub">Login · Register</div>
+        </div>
+      </div>
+      <div class="stage" style="padding:0;background:transparent;border:none;box-shadow:none;backdrop-filter:none;">
+        <div class="card auth-card" style="margin:0 auto;">
+          <h2>登录后开始游戏</h2>
+          <p class="mini">账号数据保存在本地浏览器（用于金币与道具）。</p>
+          <div class="tabs">
+            <button type="button" id="tabLogin" class="active">登录</button>
+            <button type="button" id="tabRegister">注册</button>
+          </div>
+          <div id="loginForm" class="form active">
+            <label for="loginUser">用户名</label>
+            <input id="loginUser" autocomplete="off" placeholder="例如：player1" />
+            <label for="loginPwd">密码</label>
+            <input id="loginPwd" type="password" placeholder="请输入密码" />
+            <div class="btnrow" style="margin-top:14px;">
+              <button class="btn primary" id="btnLogin">登 录</button>
+            </div>
+            <div id="loginMsg" class="msg"></div>
+          </div>
+          <div id="registerForm" class="form">
+            <label for="regUser">用户名</label>
+            <input id="regUser" autocomplete="off" placeholder="英文/数字/下划线（3-16位）" />
+            <label for="regPwd">密码</label>
+            <input id="regPwd" type="password" placeholder="至少 4 位" />
+            <div class="btnrow" style="margin-top:14px;">
+              <button class="btn primary" id="btnRegister">注 册</button>
+            </div>
+            <div id="registerMsg" class="msg"></div>
+          </div>
+          <p class="hint" style="margin-top:12px;">登录后会跳转到游戏页面。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gamePage" class="hidden">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1>森林冰火人</h1>
+        <div class="sub">Two Players · Levels</div>
+      </div>
+      <div class="hud">
+        <div class="pill"><span class="dot fire"></span><span>火娃宝石</span><strong id="fireGems">0</strong></div>
+        <div class="pill"><span class="dot water"></span><span>冰娃宝石</span><strong id="waterGems">0</strong></div>
+        <div class="pill"><span>关卡</span><strong id="levelLabel">1</strong><span>/</span><strong id="levelTotal">3</strong></div>
+        <div class="pill">
+          <span class="dot fire"></span><span>火娃PH</span>
+          <div class="hpbar"><i id="hpFireFill"></i></div>
+          <div class="hptext" id="hpFireText">100/100</div>
+        </div>
+        <div class="pill">
+          <span class="dot water"></span><span>冰娃PH</span>
+          <div class="hpbar"><i id="hpWaterFill"></i></div>
+          <div class="hptext" id="hpWaterText">100/100</div>
+        </div>
+        <div class="pill btnlike" id="btnHome" title="返回游戏主页">主页</div>
+        <div class="pill btnlike" id="openSettings" title="设置">设置</div>
+      </div>
+    </div>
+
+    <div id="homeScreen">
+      <div class="home-grid">
+        <div class="panel">
+          <h2>关卡选择</h2>
+          <p>共 40 关，每 10 关为一个难度档。点击关卡即可选择。</p>
+          <div id="levelSelectBody"></div>
+          <div class="btnrow" style="margin-top:14px;">
+            <button class="btn primary" id="btnPlaySelected">进入所选关卡</button>
+          </div>
+          <p class="hint" style="margin-top:10px;">提示：关卡内可按 <code>R</code> 重开本关。</p>
+        </div>
+        <div class="panel">
+          <h2>商店</h2>
+          <p class="mini">打怪得金币，买道具可提升攻击/防御（并可装备）。</p>
+          <div class="settings-row" style="margin-top:10px;">
+            <div class="label"><strong>金币</strong><br><span style="opacity:.75;">击杀怪物获得</span></div>
+            <div class="value-pill"><span id="coinText">0</span></div>
+            <div class="mini">已拥有：<span id="ownedText">无</span></div>
+          </div>
+          <div class="shop-grid three">
+            <div class="item">
+              <div class="title">🗡️ 宝剑</div>
+              <div class="desc">攻击力提升：+10（更快打死怪物）</div>
+              <div class="price">价格：50 金币</div>
+              <div class="actions">
+                <button class="btn gold small" id="buySword">购买</button>
+                <button class="btn secondary small" id="equipSword">装备</button>
+              </div>
+            </div>
+            <div class="item">
+              <div class="title">🛡️ 铠甲</div>
+              <div class="desc">受到怪物伤害降低：-3（更耐打）</div>
+              <div class="price">价格：60 金币</div>
+              <div class="actions">
+                <button class="btn gold small" id="buyArmor">购买</button>
+                <button class="btn secondary small" id="equipArmor">装备</button>
+              </div>
+            </div>
+            <div class="item">
+              <div class="title">🍶 酒壶</div>
+              <div class="desc">关卡内按 <strong>P</strong> 消耗 1 个酒壶，为所有玩家回满 PH</div>
+              <div class="price">价格：30 金币</div>
+              <div class="actions">
+                <button class="btn gold small" id="buyWine">购买</button>
+              </div>
+              <div class="mini" style="margin-top:8px;">当前数量：<strong id="wineCount">0</strong></div>
+            </div>
+          </div>
+          <div id="shopMsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="playArea" class="stage hidden">
+      <canvas id="game" width="960" height="540" tabindex="0"></canvas>
+
+      <div id="startOverlay" class="overlay">
+        <div class="card">
+          <h2>双人闯关</h2>
+          <p>两位玩家协作通关：收集各自颜色的宝石，踩按钮开门，火娃进火门、冰娃进冰门即可过关。</p>
+          <div class="grid">
+            <div class="kbd">
+              <strong>玩家1（火娃）</strong><br>
+          移动：<code>A</code><code>D</code>　跳跃：<code>W</code>（可二段跳）　蹲：<code>S</code><br>
+              只能安全通过：<span style="color:var(--lava);font-weight:800;">岩浆</span>
+            </div>
+            <div class="kbd">
+              <strong>玩家2（冰娃）</strong><br>
+          移动：<code>←</code><code>→</code>　跳跃：<code>↑</code>（可二段跳）　蹲：<code>↓</code><br>
+              只能安全通过：<span style="color:var(--pool);font-weight:800;">水池</span>
+            </div>
+          </div>
+      <p class="hint">提示：攻击键：玩家1 用 <code>1</code>，玩家2 用 <code>0</code>（可打怪）；碰到“相反属性”的池子会失败；尖刺也会失败。按 <code>R</code> 可快速重开本关。</p>
+          <div class="btnrow">
+            <button class="btn primary" id="btnStart">开始游戏</button>
+            <button class="btn secondary" id="btnLevelSelect">从第1关开始</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="endOverlay" class="overlay hidden">
+        <div class="card">
+          <h2 id="endTitle">通关！</h2>
+          <p id="endDesc">做得好～</p>
+          <div class="btnrow">
+            <button class="btn primary" id="btnNext">下一关</button>
+            <button class="btn secondary" id="btnRetry">重开本关</button>
+          </div>
+          <p class="hint" style="margin-top:10px;">也可以按 <code>R</code> 重开。</p>
+        </div>
+      </div>
+
+      <div id="settingsOverlay" class="overlay hidden">
+        <div class="card wide">
+          <h2>设置</h2>
+          <p>你可以自由调整角色移动速度（0–100）。数值越大，横向移动越快。</p>
+          <div class="settings-row">
+            <div class="label"><strong>移动速度</strong><br><span style="opacity:.75;">0 最慢 · 100 最快</span></div>
+            <input id="speedRange" type="range" min="0" max="100" step="1" value="30" />
+            <div class="value-pill"><span id="speedValue">30</span></div>
+          </div>
+          <div class="btnrow" style="margin-top:16px;">
+            <button class="btn primary" id="btnCloseSettings">完成</button>
+          </div>
+          <p class="hint" style="margin-top:10px;">提示：速度会自动保存到本地，下次打开仍生效。</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="hint">本页面为单文件版本，直接用浏览器打开即可运行。</div>
+  </div>
+  </section>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const fireGemsEl = document.getElementById('fireGems');
+    const waterGemsEl = document.getElementById('waterGems');
+    const levelLabelEl = document.getElementById('levelLabel');
+    const levelTotalEl = document.getElementById('levelTotal');
+    const startOverlay = document.getElementById('startOverlay');
+    const endOverlay = document.getElementById('endOverlay');
+    const endTitle = document.getElementById('endTitle');
+    const endDesc = document.getElementById('endDesc');
+    const btnStart = document.getElementById('btnStart');
+    const btnLevelSelect = document.getElementById('btnLevelSelect');
+    const btnNext = document.getElementById('btnNext');
+    const btnRetry = document.getElementById('btnRetry');
+    const hpFireFill = document.getElementById('hpFireFill');
+    const hpWaterFill = document.getElementById('hpWaterFill');
+    const hpFireText = document.getElementById('hpFireText');
+    const hpWaterText = document.getElementById('hpWaterText');
+    const openSettings = document.getElementById('openSettings');
+    const btnHome = document.getElementById('btnHome');
+    const homeScreen = document.getElementById('homeScreen');
+    const playArea = document.getElementById('playArea');
+    const btnPlaySelected = document.getElementById('btnPlaySelected');
+    const authPage = document.getElementById('authPage');
+    const gamePage = document.getElementById('gamePage');
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnRegister = document.getElementById('btnRegister');
+    const loginMsg = document.getElementById('loginMsg');
+    const registerMsg = document.getElementById('registerMsg');
+    const coinText = document.getElementById('coinText');
+    const ownedText = document.getElementById('ownedText');
+    const shopMsg = document.getElementById('shopMsg');
+    const buySword = document.getElementById('buySword');
+    const buyArmor = document.getElementById('buyArmor');
+    const buyWine = document.getElementById('buyWine');
+    const equipSword = document.getElementById('equipSword');
+    const equipArmor = document.getElementById('equipArmor');
+    const wineCountEl = document.getElementById('wineCount');
+    const levelSelectBody = document.getElementById('levelSelectBody');
+    const settingsOverlay = document.getElementById('settingsOverlay');
+    const speedRange = document.getElementById('speedRange');
+    const speedValue = document.getElementById('speedValue');
+    const btnCloseSettings = document.getElementById('btnCloseSettings');
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const GRAVITY = 0.85;
+    // 速度设置：0~100。内部映射为 MOVE（像素/帧，约等于横向加速度基准）
+    const SPEED_KEY = 'fbw_speed_0_100';
+    let speedSetting = 30;
+    let warnedSpeedZero = false;
+    function loadSpeedSetting() {
+      const raw = localStorage.getItem(SPEED_KEY);
+      const n = raw == null ? 30 : parseInt(raw, 10);
+      if (Number.isFinite(n)) speedSetting = clamp(n, 0, 100);
+      speedRange.value = String(speedSetting);
+      speedValue.textContent = String(speedSetting);
+      warnedSpeedZero = false;
+    }
+    function saveSpeedSetting() {
+      localStorage.setItem(SPEED_KEY, String(speedSetting));
+    }
+    function getMOVE() {
+      // 更细腻的速度映射：每 +1 的变化更小（非线性）
+      // 让默认 30 也“好移动”，同时保持每 +1 变化不突兀
+      // 0..100 -> 0..~9.0（低速区更易微调）
+      const x = clamp(speedSetting, 0, 100) / 100;
+      const eased = Math.pow(x, 0.85);
+      return eased * 9.0;
+    }
+    const JUMP = 12.5;
+    const FRICTION = 0.84;
+    const MAX_FALL = 18;
+
+    const keys = new Set();
+    window.addEventListener('keydown', (e) => {
+      const k = e.key;
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k)) e.preventDefault();
+      keys.add(k);
+      if (k === 'r' || k === 'R') restartLevel();
+      if (k === 'p' || k === 'P') useWine();
+    }, { passive:false });
+    window.addEventListener('keyup', (e) => keys.delete(e.key));
+
+    // ---------- 音效（Web Audio, 无需外部文件） ----------
+    let audioCtx = null;
+    const audioState = { unlocked: false, master: null };
+    const ambience = { fire: null, ice: null };
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!audioState.master) {
+        audioState.master = audioCtx.createGain();
+        audioState.master.gain.value = 0.22;
+        audioState.master.connect(audioCtx.destination);
+      }
+      audioState.unlocked = true;
+    }
+    function makeNoiseBuffer(seconds = 1.0) {
+      const sr = audioCtx.sampleRate;
+      const len = Math.floor(sr * seconds);
+      const buf = audioCtx.createBuffer(1, len, sr);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1);
+      return buf;
+    }
+    function startFireAmbience() {
+      if (!audioState.unlocked) return;
+      if (ambience.fire) return;
+      const src = audioCtx.createBufferSource();
+      src.buffer = makeNoiseBuffer(1.2);
+      src.loop = true;
+      const bp = audioCtx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 900;
+      bp.Q.value = 0.8;
+      const hp = audioCtx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 120;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.0;
+      src.connect(bp);
+      bp.connect(hp);
+      hp.connect(g);
+      g.connect(audioState.master);
+      src.start();
+      ambience.fire = { src, g, bp, hp, lastPop: 0 };
+    }
+    function setFireAmbienceLevel(level01) {
+      if (!ambience.fire) return;
+      const v = clamp(level01, 0, 1);
+      ambience.fire.g.gain.setTargetAtTime(0.10 * v, audioCtx.currentTime, 0.08);
+      // occasional crackle pops (very short)
+      const now = audioCtx.currentTime;
+      if (v > 0.15 && now - ambience.fire.lastPop > 0.35 + Math.random() * 0.7) {
+        ambience.fire.lastPop = now;
+        playTone({ type:'square', f0: 1200 + Math.random()*600, f1: 500 + Math.random()*250, dur:0.03 + Math.random()*0.03, gain:0.03 * v, curve:'lin' });
+      }
+    }
+    function startIceAmbience() {
+      if (!audioState.unlocked) return;
+      if (ambience.ice) return;
+      const src = audioCtx.createBufferSource();
+      src.buffer = makeNoiseBuffer(1.0);
+      src.loop = true;
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 220;
+      lp.Q.value = 0.5;
+      const g = audioCtx.createGain();
+      g.gain.value = 0.0;
+      src.connect(lp);
+      lp.connect(g);
+      g.connect(audioState.master);
+      src.start();
+      ambience.ice = { src, g, lp };
+    }
+    function setIceAmbienceLevel(level01) {
+      if (!ambience.ice) return;
+      const v = clamp(level01, 0, 1);
+      ambience.ice.g.gain.setTargetAtTime(0.06 * v, audioCtx.currentTime, 0.10);
+    }
+
+    // 设置 UI
+    loadSpeedSetting();
+    speedRange.addEventListener('input', () => {
+      speedSetting = clamp(parseInt(speedRange.value, 10) || 0, 0, 100);
+      speedValue.textContent = String(speedSetting);
+      saveSpeedSetting();
+    });
+    openSettings.addEventListener('click', () => {
+      settingsOverlay.classList.remove('hidden');
+    });
+    // 在设置界面按 B 也可打开商店（快捷键）
+    btnCloseSettings.addEventListener('click', () => {
+      settingsOverlay.classList.add('hidden');
+      canvas.focus();
+    });
+
+    // 导航：主页 <-> 关卡
+    let selectedLevelIndex = 0;
+    function goHome(){
+      // pause gameplay
+      running = false;
+      if (raf) cancelAnimationFrame(raf);
+      endOverlay.classList.add('hidden');
+      startOverlay.classList.remove('hidden');
+      homeScreen.classList.remove('hidden');
+      playArea.classList.add('hidden');
+      renderLevelSelect();
+      applyProfileUI();
+      // 确保主页/商店显示的是已持久化金币
+      persistProfile();
+    }
+    function startSelectedLevel(){
+      if (!requireAuth()) return;
+      homeScreen.classList.add('hidden');
+      playArea.classList.remove('hidden');
+      if (!running) {
+        loadLevel(selectedLevelIndex);
+        startOverlay.classList.remove('hidden');
+        // keep running false until user presses Start in overlay
+      } else {
+        loadLevel(selectedLevelIndex);
+      }
+      canvas.focus();
+    }
+    btnHome.addEventListener('click', goHome);
+    btnPlaySelected.addEventListener('click', startSelectedLevel);
+    function playTone({ type='sine', f0=440, f1=null, dur=0.12, gain=0.12, detune=0, when=0, curve='exp' } = {}) {
+      if (!audioState.unlocked) return;
+      const t0 = audioCtx.currentTime + when;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type;
+      osc.detune.value = detune;
+      osc.connect(g);
+      g.connect(audioState.master);
+      const startF = Math.max(40, f0);
+      osc.frequency.setValueAtTime(startF, t0);
+      if (f1 != null) {
+        const endF = Math.max(40, f1);
+        if (curve === 'exp') osc.frequency.exponentialRampToValueAtTime(endF, t0 + dur);
+        else osc.frequency.linearRampToValueAtTime(endF, t0 + dur);
+      }
+      g.gain.setValueAtTime(Math.max(0.0001, gain), t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.02);
+    }
+    function sfxJump(kind){
+      playTone({ type:'triangle', f0: kind==='fire' ? 520 : 460, f1: kind==='fire' ? 780 : 690, dur:0.10, gain:0.11 });
+    }
+    function sfxGem(kind){
+      const base = kind === 'fire' ? 660 : 590;
+      playTone({ type:'sine', f0: base, f1: base*1.5, dur:0.10, gain:0.10 });
+      playTone({ type:'sine', f0: base*2, f1: base*1.2, dur:0.08, gain:0.07, when:0.03 });
+    }
+    function sfxButton(){
+      playTone({ type:'square', f0: 220, f1: 180, dur:0.08, gain:0.07, curve:'lin' });
+    }
+    function sfxDoorOpen(kind){
+      playTone({ type:'sine', f0: kind==='fire' ? 330 : 300, f1: kind==='fire' ? 520 : 470, dur:0.16, gain:0.08 });
+    }
+    function sfxFail(){
+      playTone({ type:'sawtooth', f0: 220, f1: 70, dur:0.26, gain:0.12, curve:'lin' });
+    }
+    function sfxWin(){
+      playTone({ type:'sine', f0: 523, f1: 784, dur:0.14, gain:0.10 });
+      playTone({ type:'sine', f0: 659, f1: 988, dur:0.14, gain:0.09, when:0.10 });
+      playTone({ type:'sine', f0: 784, f1: 1175, dur:0.14, gain:0.08, when:0.20 });
+    }
+
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    // ---------- 登录/注册 + 档案（金币/道具） ----------
+    const USERS_KEY = 'fbw_users_v1';
+    const CURRENT_USER_KEY = 'fbw_current_user_v1';
+    let currentUser = null; // { username }
+    let profile = null; // { coins, owned:{sword,armor}, equipped:{sword,armor} }
+
+    function loadUsers(){
+      try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch(e){ return []; }
+    }
+    function saveUsers(users){
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+    function getUser(username){
+      return loadUsers().find(u => u.username === username);
+    }
+    function saveUser(updated){
+      const users = loadUsers();
+      const idx = users.findIndex(u => u.username === updated.username);
+      if (idx >= 0) users[idx] = updated;
+      else users.push(updated);
+      saveUsers(users);
+    }
+    function defaultProfile(){
+      return { coins: 0, owned: { sword:false, armor:false }, equipped: { sword:false, armor:false }, consumables: { wine: 0 } };
+    }
+    function loadProfileFor(username){
+      const u = getUser(username);
+      if (!u) return defaultProfile();
+      return u.profile || defaultProfile();
+    }
+    function persistProfile(){
+      if (!currentUser) return;
+      const u = getUser(currentUser.username);
+      if (!u) return;
+      u.profile = profile;
+      saveUser(u);
+    }
+    function setMsg(el, text, ok){
+      el.textContent = text;
+      el.className = 'msg ' + (ok ? 'ok' : 'error');
+    }
+    function showLogin(){
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      loginForm.classList.add('active');
+      registerForm.classList.remove('active');
+      loginMsg.textContent = '';
+      registerMsg.textContent = '';
+    }
+    function showRegister(){
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      registerForm.classList.add('active');
+      loginForm.classList.remove('active');
+      loginMsg.textContent = '';
+      registerMsg.textContent = '';
+    }
+    tabLogin.addEventListener('click', showLogin);
+    tabRegister.addEventListener('click', showRegister);
+
+    function requireAuth(){
+      // gate gameplay
+      if (!currentUser) {
+        authPage.classList.remove('hidden');
+        gamePage.classList.add('hidden');
+        return false;
+      }
+      authPage.classList.add('hidden');
+      gamePage.classList.remove('hidden');
+      return true;
+    }
+    function applyProfileUI(){
+      if (!profile) return;
+      coinText.textContent = String(profile.coins);
+      const owned = [];
+      if (profile.owned.sword) owned.push('宝剑');
+      if (profile.owned.armor) owned.push('铠甲');
+      ownedText.textContent = owned.length ? owned.join('、') : '无';
+      if (profile.consumables && wineCountEl) wineCountEl.textContent = String(profile.consumables.wine || 0);
+      // 装备状态提示（用于确认已穿戴）
+      const eq = [];
+      if (profile.equipped && profile.equipped.sword) eq.push('宝剑已装备');
+      if (profile.equipped && profile.equipped.armor) eq.push('铠甲已装备');
+      if (shopMsg && eq.length) {
+        // 不覆盖正在显示的购买提示
+        if (!shopMsg.textContent) {
+          shopMsg.textContent = eq.join(' · ');
+          shopMsg.className = 'msg ok';
+        }
+      }
+    }
+
+    btnLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      ensureAudio();
+      const username = (document.getElementById('loginUser').value || '').trim();
+      const pwd = (document.getElementById('loginPwd').value || '').trim();
+      const u = getUser(username);
+      if (!u || u.pwd !== pwd) {
+        setMsg(loginMsg, '用户名或密码错误', false);
+        return;
+      }
+      currentUser = { username };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+      profile = loadProfileFor(username);
+      applyProfileUI();
+      authPage.classList.add('hidden');
+      gamePage.classList.remove('hidden');
+      // 登录后进入游戏主页
+      homeScreen.classList.remove('hidden');
+      playArea.classList.add('hidden');
+      running = false;
+      if (raf) cancelAnimationFrame(raf);
+      setMsg(loginMsg, '登录成功！', true);
+      canvas.focus();
+    });
+
+    btnRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      ensureAudio();
+      const username = (document.getElementById('regUser').value || '').trim();
+      const pwd = (document.getElementById('regPwd').value || '').trim();
+      if (!/^[a-zA-Z0-9_]{3,16}$/.test(username)) {
+        setMsg(registerMsg, '用户名需为英文/数字/下划线（3-16位）', false);
+        return;
+      }
+      if (pwd.length < 4) {
+        setMsg(registerMsg, '密码至少 4 位', false);
+        return;
+      }
+      if (getUser(username)) {
+        setMsg(registerMsg, '该用户名已存在', false);
+        return;
+      }
+      saveUser({ username, pwd, profile: defaultProfile() });
+      setMsg(registerMsg, '注册成功，请登录', true);
+      showLogin();
+      document.getElementById('loginUser').value = username;
+      document.getElementById('loginPwd').value = pwd;
+    });
+
+    // auto login
+    (function(){
+      try{
+        const raw = localStorage.getItem(CURRENT_USER_KEY);
+        if (raw) {
+          const u = JSON.parse(raw);
+          if (u && u.username && getUser(u.username)) {
+            currentUser = { username: u.username };
+            profile = loadProfileFor(u.username);
+            applyProfileUI();
+            authPage.classList.add('hidden');
+            gamePage.classList.remove('hidden');
+            homeScreen.classList.remove('hidden');
+            playArea.classList.add('hidden');
+            return;
+          }
+        }
+      } catch(e){}
+      currentUser = null;
+      profile = null;
+      authPage.classList.remove('hidden');
+      gamePage.classList.add('hidden');
+    })();
+
+    // 商店已在主页展示（无需弹窗）
+
+    function spend(cost){
+      if (!profile) return false;
+      if (profile.coins < cost) return false;
+      profile.coins -= cost;
+      persistProfile();
+      applyProfileUI();
+      return true;
+    }
+    function giveCoins(amount){
+      if (!profile) return;
+      profile.coins += amount;
+      persistProfile();
+      applyProfileUI();
+    }
+    function toastShop(text, ok){
+      setMsg(shopMsg, text, ok);
+      setTimeout(() => { if (shopMsg.textContent === text) shopMsg.textContent = ''; }, 1500);
+    }
+    buySword.addEventListener('click', () => {
+      if (!requireAuth()) return;
+      if (profile.owned.sword) return toastShop('已拥有宝剑', true);
+      if (!spend(50)) return toastShop('金币不足', false);
+      profile.owned.sword = true;
+      persistProfile();
+      applyProfileUI();
+      toastShop('购买成功：宝剑', true);
+    });
+    buyArmor.addEventListener('click', () => {
+      if (!requireAuth()) return;
+      if (profile.owned.armor) return toastShop('已拥有铠甲', true);
+      if (!spend(60)) return toastShop('金币不足', false);
+      profile.owned.armor = true;
+      persistProfile();
+      applyProfileUI();
+      toastShop('购买成功：铠甲', true);
+    });
+
+    buyWine.addEventListener('click', () => {
+      if (!requireAuth()) return;
+      if (!profile.consumables) profile.consumables = { wine: 0 };
+      if (!spend(30)) return toastShop('金币不足', false);
+      profile.consumables.wine = (profile.consumables.wine || 0) + 1;
+      persistProfile();
+      applyProfileUI();
+      toastShop('购买成功：酒壶 +1', true);
+    });
+    equipSword.addEventListener('click', () => {
+      if (!requireAuth()) return;
+      if (!profile.owned.sword) return toastShop('先购买宝剑', false);
+      profile.equipped.sword = !profile.equipped.sword;
+      persistProfile();
+      toastShop(profile.equipped.sword ? '已装备宝剑' : '已卸下宝剑', true);
+    });
+    equipArmor.addEventListener('click', () => {
+      if (!requireAuth()) return;
+      if (!profile.owned.armor) return toastShop('先购买铠甲', false);
+      profile.equipped.armor = !profile.equipped.armor;
+      persistProfile();
+      toastShop(profile.equipped.armor ? '已装备铠甲' : '已卸下铠甲', true);
+    });
+
+    function rectsOverlap(a, b){
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function resolveAABB(mover, solid){
+      // returns collision normal info, modifies mover position/velocity
+      const prev = mover._prev;
+      const out = { hit:false, fromTop:false, fromBottom:false, fromLeft:false, fromRight:false };
+      if (!rectsOverlap(mover, solid)) return out;
+      out.hit = true;
+
+      // Determine collision axis via previous position
+      const wasAbove = prev.y + mover.h <= solid.y;
+      const wasBelow = prev.y >= solid.y + solid.h;
+      const wasLeft  = prev.x + mover.w <= solid.x;
+      const wasRight = prev.x >= solid.x + solid.w;
+
+      if (wasAbove) {
+        mover.y = solid.y - mover.h;
+        mover.vy = 0;
+        out.fromTop = true;
+      } else if (wasBelow) {
+        mover.y = solid.y + solid.h;
+        mover.vy = 0;
+        out.fromBottom = true;
+      } else if (wasLeft) {
+        mover.x = solid.x - mover.w;
+        mover.vx = 0;
+        out.fromLeft = true;
+      } else if (wasRight) {
+        mover.x = solid.x + solid.w;
+        mover.vx = 0;
+        out.fromRight = true;
+      } else {
+        // Fallback: push out minimally
+        const dx1 = (solid.x + solid.w) - mover.x;
+        const dx2 = (mover.x + mover.w) - solid.x;
+        const dy1 = (solid.y + solid.h) - mover.y;
+        const dy2 = (mover.y + mover.h) - solid.y;
+        const min = Math.min(dx1, dx2, dy1, dy2);
+        if (min === dx1) { mover.x = solid.x + solid.w; mover.vx = 0; out.fromLeft = true; }
+        else if (min === dx2) { mover.x = solid.x - mover.w; mover.vx = 0; out.fromRight = true; }
+        else if (min === dy1) { mover.y = solid.y + solid.h; mover.vy = 0; out.fromTop = true; }
+        else { mover.y = solid.y - mover.h; mover.vy = 0; out.fromBottom = true; }
+      }
+      return out;
+    }
+
+    // ---------- Level data ----------
+    // solids: {x,y,w,h}
+    // hazards: {x,y,w,h, type: 'lava'|'water'|'spike'}
+    // gems: {x,y,r, for:'fire'|'water', taken:false}
+    // buttons: {x,y,w,h, id, pressed:false}
+    // doors: {x,y,w,h, id, kind:'fire'|'water', open:false}
+    // ---------- 40 关：按 10 关一个难度档（自动生成，保证可玩） ----------
+    function seededRand(seed) {
+      // xorshift32
+      let x = seed | 0;
+      return function() {
+        x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+        return ((x >>> 0) % 10000) / 10000;
+      };
+    }
+    function baseRoomSolids() {
+      return [
+        {x:0,y:505,w:960,h:35},
+        {x:0,y:0,w:18,h:540},
+        {x:942,y:0,w:18,h:540},
+      ];
+    }
+    function makeLevel(n) {
+      // n: 1..40
+      const idx = n - 1;
+      const tier = Math.floor(idx / 10); // 0..3
+      const within = (idx % 10) + 1;
+      const rnd = seededRand(1000 + n * 97);
+      const template = idx % 4; // 0..3
+
+      const nameTier = ['新手地窖','机关走廊','熔岩迷宫','极限深渊'][tier] || '地窖';
+      const name = `${nameTier} · ${within}`;
+
+      const solids = baseRoomSolids();
+      const hazards = [];
+      const gems = [];
+      const buttons = [];
+      const doors = [];
+      const dynamicSolids = [];
+      const portals = [];
+
+      // spawns
+      const spawns = {
+        fire: { x: 86, y: 420 },
+        water:{ x: 146, y: 420 }
+      };
+
+      // Doors placement (more vertical as difficulty increases)
+      const doorY = tier === 0 ? 448 : tier === 1 ? 370 : tier === 2 ? 290 : 230;
+      doors.push({x: 905, y: doorY, w:38, h:58, id:'exit', kind:'fire', open:false});
+      doors.push({x: 855, y: doorY, w:38, h:58, id:'exit', kind:'water', open:false});
+
+      // A reliable stepping path to the doors (never too tight)
+      // Create 5 platforms ascending to the right
+      const stepCount = 5 + (tier >= 2 ? 1 : 0);
+      const startX = 90;
+      const startY = 440;
+      const dx = 150;
+      const dy = 40 + tier * 6;
+      for (let i=0;i<stepCount;i++){
+        const px = startX + i*dx + Math.floor((rnd()-0.5)*14);
+        const py = startY - i*dy + Math.floor((rnd()-0.5)*10);
+        const pw = 150 - tier*6;
+        const ph = 18;
+        solids.push({x: clamp(px, 40, 760), y: clamp(py, 160, 470), w: pw, h: ph});
+      }
+
+      // Add a mid-floor safe strip
+      solids.push({x: 260, y: 470, w: 180, h: 18});
+
+      // Template-specific gimmick: bridge/gate/mixed
+      if (template === 0) {
+        // bridge enabled by button
+        buttons.push({x: 430, y: 458, w: 44, h: 12, id: 'bridge', pressed: false});
+        dynamicSolids.push({id:'bridge', rect:{x: 420, y: 410, w: 180, h: 16}, enabled:false});
+      } else if (template === 1) {
+        // gate disabled by button
+        buttons.push({x: 520, y: 458, w: 44, h: 12, id: 'gate', pressed: false});
+        dynamicSolids.push({id:'gate', rect:{x: 800, y: 260, w: 18, h: 260}, enabled:true});
+      } else if (template === 2) {
+        // two buttons share bridge
+        buttons.push({x: 260, y: 458, w: 44, h: 12, id: 'bridge2', pressed: false});
+        buttons.push({x: 610, y: 458, w: 44, h: 12, id: 'bridge2', pressed: false});
+        dynamicSolids.push({id:'bridge2', rect:{x: 340, y: 430, w: 520, h: 16}, enabled:false});
+      } else {
+        // no button: add an extra safe platform near right
+        solids.push({x: 720, y: 420, w: 170, h: 18});
+      }
+
+      // Hazards scaling: more pools + spikes as tier increases
+      const poolY = 505 - 20;
+      const poolCount = 2 + tier; // 2..5
+      const poolW = Math.floor(120 - tier*10);
+      for (let i=0;i<poolCount;i++){
+        const hx = 220 + i*(poolW + 20) + Math.floor(rnd()*20);
+        const type = (i + idx) % 2 === 0 ? 'lava' : 'water';
+        hazards.push({x: clamp(hx, 40, 880), y: poolY, w: poolW, h: 20, type});
+      }
+      const spikeCount = tier === 0 ? 1 : tier === 1 ? 2 : tier === 2 ? 3 : 4;
+      for (let i=0;i<spikeCount;i++){
+        const sx = 300 + i*140 + Math.floor((rnd()-0.5)*60);
+        const sy = 460 + Math.floor(rnd()*12);
+        hazards.push({x: clamp(sx, 40, 920), y: sy, w: 14, h: 10, type:'spike'});
+      }
+
+      // Gems scaling: 2/3/4 per kind by tier
+      const perKind = tier === 0 ? 2 : tier === 1 ? 3 : 4;
+      const gemSlots = [];
+      // place gems on some platforms (always reachable)
+      const platCandidates = solids.filter(s => s.y < 490 && s.w >= 120 && s.y > 150).slice(0, 8);
+      for (let i=0;i<platCandidates.length;i++){
+        const s = platCandidates[i];
+        gemSlots.push({x: s.x + s.w*0.5, y: s.y - 10});
+      }
+      function takeSlot() {
+        const k = Math.floor(rnd() * gemSlots.length);
+        return gemSlots.splice(k, 1)[0] || {x: 200 + rnd()*560, y: 300 + rnd()*120};
+      }
+      for (let i=0;i<perKind;i++){
+        const a = takeSlot();
+        gems.push({x: Math.floor(a.x + (rnd()-0.5)*40), y: Math.floor(a.y), r: 8, for: 'fire', taken:false});
+      }
+      for (let i=0;i<perKind;i++){
+        const a = takeSlot();
+        gems.push({x: Math.floor(a.x + (rnd()-0.5)*40), y: Math.floor(a.y), r: 8, for: 'water', taken:false});
+      }
+
+      // Difficulty seasoning: add a small “ice trap” platform region on high tiers (visual only as hazard already does rule)
+      if (tier >= 2) {
+        solids.push({x: 480, y: 300 - tier*10, w: 120, h: 18});
+      }
+
+      // Portals: from level 6+ add one pair; higher tiers add stronger placement
+      if (n >= 6) {
+        const pY1 = tier <= 1 ? 446 : 386;
+        const pY2 = tier <= 1 ? 266 : 206;
+        const leftX = 60;
+        const rightX = 860;
+        portals.push({ id: 'A', x: leftX, y: pY1, w: 30, h: 48, to: 'B' });
+        portals.push({ id: 'B', x: rightX, y: pY2, w: 30, h: 48, to: 'A' });
+      }
+
+      return { name, spawns, solids, hazards, gems, buttons, doors, dynamicSolids, portals };
+    }
+
+    const levels = Array.from({ length: 40 }, (_, i) => makeLevel(i + 1));
+    levelTotalEl.textContent = String(levels.length);
+
+    // ---------- Game state ----------
+    let levelIndex = 0;
+    let running = false;
+    let won = false;
+    let failed = false;
+    let raf = null;
+    let lastT = 0;
+
+    const players = {
+      fire: makePlayer('fire'),
+      water: makePlayer('water')
+    };
+
+    function makePlayer(kind){
+      const size = { w: 26, h: 34 };
+      return {
+        kind,
+        x: 60, y: 60,
+        w: size.w, h: size.h,
+        standH: size.h,
+        crouchH: 22,
+        vx: 0, vy: 0,
+        onGround: false,
+        gems: 0,
+        jumpCount: 0,
+        _jumpWasDown: false,
+        crouching: false,
+        portalCooldown: 0,
+        facing: 1,
+        hpMax: 100,
+        hp: 100,
+        dead: false,
+        hurtCooldown: 0,
+        atkCooldown: 0,
+        _attackHitbox: null,
+        _prev: { x:0, y:0 },
+      };
+    }
+
+    function updateHpUI(){
+      const f = clamp(players.fire.hp / players.fire.hpMax, 0, 1);
+      const w = clamp(players.water.hp / players.water.hpMax, 0, 1);
+      hpFireFill.style.transform = `scaleX(${f})`;
+      hpWaterFill.style.transform = `scaleX(${w})`;
+      hpFireText.textContent = `${Math.max(0, Math.round(players.fire.hp))}/${players.fire.hpMax}`;
+      hpWaterText.textContent = `${Math.max(0, Math.round(players.water.hp))}/${players.water.hpMax}`;
+    }
+
+    function damagePlayer(p, amount){
+      if (failed || won) return;
+      if (p.dead) return;
+      if (p.hurtCooldown > 0) return;
+      const reduce = (profile && profile.equipped && profile.equipped.armor) ? 3 : 0;
+      const dmg = Math.max(1, amount - reduce);
+      p.hp -= dmg;
+      p.hurtCooldown = 0.45;
+      if (p.hp <= 0) {
+        p.hp = 0;
+        p.dead = true; // PH 归零立即消失
+        p._attackHitbox = null;
+        playTone({ type:'sawtooth', f0: 180, f1: 60, dur:0.22, gain:0.07, curve:'lin' });
+      }
+      updateHpUI();
+      playTone({ type:'sawtooth', f0: 220, f1: 140, dur:0.08, gain:0.05, curve:'lin' });
+    }
+
+    function useWine(){
+      if (!requireAuth()) return;
+      if (!running) return; // 必须在关卡里使用
+      if (!profile || !profile.consumables) return;
+      const count = profile.consumables.wine || 0;
+      if (count <= 0) return;
+      profile.consumables.wine = count - 1;
+      // revive + heal both
+      players.fire.dead = false;
+      players.water.dead = false;
+      players.fire.hp = players.fire.hpMax;
+      players.water.hp = players.water.hpMax;
+      players.fire.hurtCooldown = players.water.hurtCooldown = 0;
+      updateHpUI();
+      persistProfile();
+      applyProfileUI();
+      // heal sound
+      playTone({ type:'sine', f0: 440, f1: 880, dur:0.18, gain:0.06 });
+      playTone({ type:'sine', f0: 660, f1: 990, dur:0.18, gain:0.05, when: 0.10 });
+    }
+
+    function handleAttack(p, keyDown, dtScale){
+      // Space for both; per-player cooldown prevents spam
+      if (p.atkCooldown > 0) p.atkCooldown = Math.max(0, p.atkCooldown - (dtScale * 16.67) / 1000);
+      if (p._attackHitbox) {
+        p._attackHitbox.ttl -= (dtScale * 16.67) / 1000;
+        if (p._attackHitbox.ttl <= 0) p._attackHitbox = null;
+      }
+      if (!keyDown) return;
+      if (p.atkCooldown > 0) return;
+      p.atkCooldown = 0.22;
+      // attack whoosh
+      playTone({ type:'triangle', f0: 520, f1: 220, dur:0.05, gain:0.04, curve:'lin' });
+      const reach = 22;
+      p._attackHitbox = {
+        x: p.facing > 0 ? (p.x + p.w) : (p.x - reach),
+        y: p.y + 6,
+        w: reach,
+        h: Math.max(10, p.h - 12),
+        ttl: 0.12
+      };
+    }
+
+    function resetGemsCounts(){
+      players.fire.gems = 0;
+      players.water.gems = 0;
+      fireGemsEl.textContent = '0';
+      waterGemsEl.textContent = '0';
+    }
+
+    function loadLevel(idx){
+      levelIndex = clamp(idx, 0, levels.length - 1);
+      const L = levels[levelIndex];
+      levelLabelEl.textContent = String(levelIndex + 1);
+      resetGemsCounts();
+
+      // reset pickups/buttons/doors/dynamics
+      L.gems.forEach(g => g.taken = false);
+      L.buttons.forEach(b => b.pressed = false);
+      L.doors.forEach(d => d.open = false);
+      // 用于音效/状态变化检测
+      L._prevPressedById = {};
+      L._prevDoorOpen = { fire:false, water:false };
+      L.dynamicSolids.forEach(ds => {
+        // level defines base enabled state, keep it
+        // If it's a gate (enabled true), it starts blocking until pressed -> disable
+        // If it's a bridge (enabled false), it starts absent until pressed -> enable
+      });
+
+      // spawn
+      players.fire.x = L.spawns.fire.x; players.fire.y = L.spawns.fire.y;
+      players.water.x = L.spawns.water.x; players.water.y = L.spawns.water.y;
+      players.fire.vx = players.fire.vy = 0;
+      players.water.vx = players.water.vy = 0;
+      players.fire.onGround = players.water.onGround = false;
+      players.fire.hp = players.fire.hpMax;
+      players.water.hp = players.water.hpMax;
+      players.fire.dead = false;
+      players.water.dead = false;
+      players.fire.hurtCooldown = players.water.hurtCooldown = 0;
+      players.fire.atkCooldown = players.water.atkCooldown = 0;
+      players.fire._attackHitbox = players.water._attackHitbox = null;
+      updateHpUI();
+      resetMonstersForLevel();
+
+      won = false;
+      failed = false;
+      endOverlay.classList.add('hidden');
+      canvas.focus();
+    }
+
+    // ---------- 怪物系统 ----------
+    let monsters = [];
+    let spawnTimer = 0;
+    const MONSTER_MAX = 4;
+
+    function resetMonstersForLevel(){
+      monsters = [];
+      spawnTimer = 1.2;
+    }
+
+    function spawnMonster(L){
+      // choose a platform to spawn on
+      const plats = L.solids.filter(s => s.y < 490 && s.w >= 120);
+      const s = plats.length ? plats[Math.floor(Math.random() * plats.length)] : {x: 200, y: 470, w: 200, h: 18};
+      const x = s.x + 20 + Math.random() * Math.max(10, s.w - 60);
+      const y = s.y - 26;
+      const tier = Math.floor(levelIndex / 10);
+      const hpMax = 35 + tier * 15;
+      monsters.push({
+        id: Math.random().toString(16).slice(2),
+        x, y, w: 26, h: 22,
+        vx: 0, vy: 0,
+        hpMax,
+        hp: hpMax,
+        hurtCd: 0,
+        atkCd: 0,
+        _prev: { x, y },
+      });
+    }
+
+    function damageMonster(m, amount, by){
+      if (m.hurtCd > 0) return;
+      m.hp -= amount;
+      m.hurtCd = 0.18;
+      if (by) m.lastHitBy = by;
+      playTone({ type:'square', f0: 320, f1: 220, dur:0.05, gain:0.03, curve:'lin' });
+    }
+
+    function updateMonsters(L, scale){
+      // spawn
+      spawnTimer -= (scale * 16.67) / 1000;
+      if (spawnTimer <= 0 && monsters.length < MONSTER_MAX) {
+        spawnMonster(L);
+        spawnTimer = 2.8 + Math.random() * 2.2;
+      }
+
+      const solids = getSolids(L);
+      for (const m of monsters) {
+        m._prev.x = m.x; m._prev.y = m.y;
+        m.hurtCd = Math.max(0, m.hurtCd - (scale * 16.67) / 1000);
+        m.atkCd = Math.max(0, m.atkCd - (scale * 16.67) / 1000);
+
+        // choose nearest alive player
+        const alive = [];
+        if (!players.fire.dead) alive.push(players.fire);
+        if (!players.water.dead) alive.push(players.water);
+        if (alive.length === 0) break;
+        const dxF = !players.fire.dead ? (players.fire.x + players.fire.w/2) - (m.x + m.w/2) : 1e9;
+        const dxW = !players.water.dead ? (players.water.x + players.water.w/2) - (m.x + m.w/2) : 1e9;
+        const target = Math.abs(dxF) < Math.abs(dxW) ? players.fire : players.water;
+        const dir = (target.x + target.w/2) > (m.x + m.w/2) ? 1 : -1;
+        const tier = Math.floor(levelIndex / 10);
+        const speed = 1.2 + tier * 0.35;
+
+        m.vx += dir * speed * scale;
+        m.vx *= Math.pow(0.86, scale);
+        m.vx = clamp(m.vx, -3.2 - tier*0.4, 3.2 + tier*0.4);
+        m.vy += GRAVITY * scale;
+        m.vy = clamp(m.vy, -30, MAX_FALL);
+        m.x += m.vx * scale;
+        m.y += m.vy * scale;
+        m.x = clamp(m.x, 18, W - 18 - m.w);
+
+        // collide solids
+        let onGround = false;
+        for (const s of solids) {
+          const hit = resolveAABB(m, s);
+          if (hit.hit && hit.fromTop) onGround = true;
+        }
+        // small hop if stuck at edge
+        if (onGround && Math.random() < 0.01) m.vy = -7 - tier;
+
+        // attack players on contact
+        if (m.atkCd <= 0) {
+          if (!players.fire.dead && rectsOverlap(m, players.fire)) { damagePlayer(players.fire, 10); m.atkCd = 0.6; }
+          if (!players.water.dead && rectsOverlap(m, players.water)) { damagePlayer(players.water, 10); m.atkCd = 0.6; }
+        }
+
+        // players attack monster (apply sword bonus)
+        const fireDmg = 18 + ((profile && profile.equipped && profile.equipped.sword) ? 10 : 0);
+        const waterDmg = 18 + ((profile && profile.equipped && profile.equipped.sword) ? 10 : 0);
+        if (!players.fire.dead && players.fire._attackHitbox && rectsOverlap(players.fire._attackHitbox, m)) damageMonster(m, fireDmg, 'fire');
+        if (!players.water.dead && players.water._attackHitbox && rectsOverlap(players.water._attackHitbox, m)) damageMonster(m, waterDmg, 'water');
+      }
+
+      // remove dead + award coins
+      const dead = monsters.filter(m => m.hp <= 0);
+      if (dead.length) {
+        // 规则：每击杀一只怪物固定 +10 金币（可带出关卡，写入账号档案）
+        const gain = dead.length * 10;
+        giveCoins(gain);
+        playTone({ type:'sine', f0: 660, f1: 990, dur:0.10, gain:0.05 });
+      }
+      monsters = monsters.filter(m => m.hp > 0);
+    }
+
+    function drawMonsters(){
+      for (const m of monsters) {
+        ctx.save();
+        const t = performance.now()/1000;
+        const bob = Math.sin(t*6 + m.x*0.02)*1.2;
+        ctx.shadowColor = 'rgba(0,0,0,0.45)';
+        ctx.shadowBlur = 10;
+        drawRoundedRect(m.x, m.y + bob, m.w, m.h, 10, 'rgba(40,40,55,0.95)', 'rgba(255,255,255,0.12)');
+        ctx.shadowBlur = 0;
+        // eyes
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath(); ctx.arc(m.x + 8, m.y + bob + 8, 2.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(m.x + m.w - 8, m.y + bob + 8, 2.2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.beginPath(); ctx.arc(m.x + 8, m.y + bob + 8, 1.0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(m.x + m.w - 8, m.y + bob + 8, 1.0, 0, Math.PI*2); ctx.fill();
+        // hp bar
+        const pct = clamp(m.hp / m.hpMax, 0, 1);
+        ctx.globalAlpha = 0.9;
+        drawRoundedRect(m.x - 2, m.y + bob - 10, m.w + 4, 6, 4, 'rgba(0,0,0,0.45)', 'rgba(255,255,255,0.08)');
+        drawRoundedRect(m.x - 2, m.y + bob - 10, (m.w + 4)*pct, 6, 4, 'rgba(248,113,113,0.9)', null);
+        ctx.restore();
+      }
+    }
+
+    function restartLevel(){
+      if (!running) return;
+      loadLevel(levelIndex);
+    }
+
+    function openEndOverlay(title, desc, canNext){
+      endTitle.textContent = title;
+      endDesc.textContent = desc;
+      btnNext.style.display = canNext ? 'inline-block' : 'none';
+      endOverlay.classList.remove('hidden');
+    }
+
+    // ---------- 关卡选择渲染 ----------
+    function tierMeta(tier){
+      if (tier === 0) return { name: '难度 1/4 · 新手', cls: 'easy' };
+      if (tier === 1) return { name: '难度 2/4 · 进阶', cls: 'normal' };
+      if (tier === 2) return { name: '难度 3/4 · 困难', cls: 'hard' };
+      return { name: '难度 4/4 · 地狱', cls: 'hell' };
+    }
+    function renderLevelSelect(){
+      levelSelectBody.innerHTML = '';
+      for (let tier=0; tier<4; tier++){
+        const meta = tierMeta(tier);
+        const title = document.createElement('div');
+        title.className = 'level-group-title';
+        title.innerHTML = `${meta.name} <span class="badge">第 ${tier*10+1}–${tier*10+10} 关</span>`;
+        levelSelectBody.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'level-grid';
+        for (let n=tier*10+1; n<=tier*10+10; n++){
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = `level-btn ${meta.cls}`;
+          b.textContent = String(n);
+          b.addEventListener('click', () => {
+            ensureAudio();
+            selectedLevelIndex = n - 1;
+            // visual selection
+            const all = levelSelectBody.querySelectorAll('.level-btn');
+            all.forEach(x => x.style.outline = '');
+            b.style.outline = '2px solid rgba(250,204,21,0.75)';
+            b.style.outlineOffset = '2px';
+          });
+          grid.appendChild(b);
+        }
+        levelSelectBody.appendChild(grid);
+      }
+    }
+    renderLevelSelect();
+
+    btnStart.addEventListener('click', () => {
+      ensureAudio();
+      if (!requireAuth()) return;
+      startOverlay.classList.add('hidden');
+      if (!running) start();
+    });
+    btnLevelSelect.addEventListener('click', () => {
+      ensureAudio();
+      if (!requireAuth()) return;
+      loadLevel(0);
+      startOverlay.classList.add('hidden');
+      if (!running) start();
+    });
+    btnRetry.addEventListener('click', () => restartLevel());
+    btnNext.addEventListener('click', () => {
+      if (levelIndex < levels.length - 1) loadLevel(levelIndex + 1);
+      else loadLevel(0);
+      endOverlay.classList.add('hidden');
+    });
+
+    function start(){
+      running = true;
+      loadLevel(levelIndex);
+      lastT = performance.now();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function loop(t){
+      if (!running) return;
+      const dt = Math.min(33, t - lastT);
+      lastT = t;
+      update(dt / 16.67);
+      render();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function update(scale){
+      const L = levels[levelIndex];
+
+      // 如果速度被设置为 0，则无法移动：自动弹出设置提示一次
+      if (speedSetting === 0 && !warnedSpeedZero && !failed && !won) {
+        warnedSpeedZero = true;
+        settingsOverlay.classList.remove('hidden');
+      }
+
+      // cooldown tick
+      players.fire.hurtCooldown = Math.max(0, players.fire.hurtCooldown - (scale * 16.67) / 1000);
+      players.water.hurtCooldown = Math.max(0, players.water.hurtCooldown - (scale * 16.67) / 1000);
+
+      // buttons -> dynamic solids/doors
+      updateButtons(L);
+      updateDynamics(L);
+
+      if (!players.fire.dead) {
+        updatePlayer(players.fire, scale, {
+          left: keys.has('a') || keys.has('A'),
+          right: keys.has('d') || keys.has('D'),
+          jump: keys.has('w') || keys.has('W'),
+          down: keys.has('s') || keys.has('S')
+        }, L);
+      }
+      if (!players.water.dead) {
+        updatePlayer(players.water, scale, {
+          left: keys.has('ArrowLeft'),
+          right: keys.has('ArrowRight'),
+          jump: keys.has('ArrowUp'),
+          down: keys.has('ArrowDown')
+        }, L);
+      }
+      // 允许互相踩头：把另一位玩家当成“平台”（仅从上方站上去）
+      if (!players.fire.dead && !players.water.dead) resolvePlayerStacking(players.fire, players.water);
+      // 传送门
+      if (!players.fire.dead) updatePortals(players.fire, L, scale);
+      if (!players.water.dead) updatePortals(players.water, L, scale);
+
+      // 攻击：玩家1=1，玩家2=0
+      if (!players.fire.dead) handleAttack(players.fire, keys.has('1'), scale);
+      if (!players.water.dead) handleAttack(players.water, keys.has('0'), scale);
+
+      // 怪物
+      updateMonsters(L, scale);
+
+      // collect gems
+      collectGems(L);
+
+      // hazards + fail conditions
+      if (!failed) {
+        const f = players.fire.dead ? false : checkHazards(players.fire, L);
+        const w = players.water.dead ? false : checkHazards(players.water, L);
+        if (f || w) {
+          failed = true;
+          sfxFail();
+          openEndOverlay('失败了', '有一位玩家碰到了危险区域。按“重开本关”或按 R 继续。', false);
+        }
+      }
+
+      // HP fail
+      // 两位玩家都 PH 归零才结束
+      if (!failed && (players.fire.hp <= 0 && players.water.hp <= 0)) {
+        failed = true;
+        sfxFail();
+        openEndOverlay('失败了', '两位玩家 PH 都归零了。按“重开本关”或按 R 继续。', false);
+      }
+
+      // win condition: both alive players in their doors (and doors open)
+      if (!failed && !won) {
+        const fireDoor = L.doors.find(d => d.id === 'exit' && d.kind === 'fire');
+        const waterDoor = L.doors.find(d => d.id === 'exit' && d.kind === 'water');
+        const needFire = !players.fire.dead;
+        const needWater = !players.water.dead;
+        const inFireDoor = !needFire || (fireDoor && fireDoor.open && rectsOverlap(players.fire, fireDoor));
+        const inWaterDoor = !needWater || (waterDoor && waterDoor.open && rectsOverlap(players.water, waterDoor));
+        if (inFireDoor && inWaterDoor) {
+          won = true;
+          const isLast = levelIndex === levels.length - 1;
+          sfxWin();
+          openEndOverlay(isLast ? '恭喜通关全部关卡！' : '本关通过！', isLast ? '你们完成了森林冰火人三关挑战～' : '继续下一关吧～', !isLast);
+        }
+      }
+    }
+
+    function updateButtons(L){
+      for (const b of L.buttons) {
+        const hitF = rectsOverlap(players.fire, {x:b.x,y:b.y,w:b.w,h:b.h});
+        const hitW = rectsOverlap(players.water,{x:b.x,y:b.y,w:b.w,h:b.h});
+        const now = hitF || hitW;
+        const prev = !!b.pressed;
+        b.pressed = now;
+        if (now && !prev) sfxButton();
+      }
+    }
+
+    function updateDynamics(L){
+      // Evaluate per id: if ANY button with id pressed => active
+      const pressedById = {};
+      for (const b of L.buttons) {
+        pressedById[b.id] = pressedById[b.id] || b.pressed;
+      }
+      for (const ds of L.dynamicSolids) {
+        const pressed = !!pressedById[ds.id];
+        // Heuristic: if starts enabled true => it's a gate, pressing disables.
+        // if starts enabled false => it's a bridge, pressing enables.
+        const isGate = ds.enabled === true;
+        const enabledNow = isGate ? !pressed : pressed;
+        ds._enabledNow = enabledNow;
+      }
+      // doors open when all gems collected by both? Here: open when at least one button for exit/gate pressed? keep simple:
+      // Door is open if all gems of its kind in level collected, and any gating dynamic not blocking exits
+      const fireAll = L.gems.filter(g => g.for === 'fire').every(g => g.taken);
+      const waterAll = L.gems.filter(g => g.for === 'water').every(g => g.taken);
+      for (const d of L.doors) {
+        if (d.kind === 'fire') d.open = fireAll;
+        if (d.kind === 'water') d.open = waterAll;
+      }
+
+      // door open sfx (only when state flips to open)
+      const fireDoor = L.doors.find(d => d.id === 'exit' && d.kind === 'fire');
+      const waterDoor = L.doors.find(d => d.id === 'exit' && d.kind === 'water');
+      const prevFireOpen = !!L._prevDoorOpen?.fire;
+      const prevWaterOpen = !!L._prevDoorOpen?.water;
+      const nowFireOpen = !!fireDoor?.open;
+      const nowWaterOpen = !!waterDoor?.open;
+      if (nowFireOpen && !prevFireOpen) sfxDoorOpen('fire');
+      if (nowWaterOpen && !prevWaterOpen) sfxDoorOpen('water');
+      L._prevDoorOpen = { fire: nowFireOpen, water: nowWaterOpen };
+    }
+
+    function getSolids(L){
+      const solids = [...L.solids];
+      for (const ds of L.dynamicSolids) {
+        if (ds._enabledNow) solids.push(ds.rect);
+      }
+      return solids;
+    }
+
+    function overlapsAnySolid(rect, solids){
+      for (const s of solids) {
+        if (rectsOverlap(rect, s)) return true;
+      }
+      return false;
+    }
+
+    function resolvePlayerStacking(a, b){
+      if (failed || won) return;
+      if (!rectsOverlap(a, b)) return;
+
+      // 谁从上方落下，就站到对方头上（只处理“从上方”）
+      const aPrevBottom = a._prev.y + a.h;
+      const bPrevBottom = b._prev.y + b.h;
+      const aPrevTop = a._prev.y;
+      const bPrevTop = b._prev.y;
+
+      const aWasAbove = aPrevBottom <= b._prev.y + 0.5;
+      const bWasAbove = bPrevBottom <= a._prev.y + 0.5;
+
+      // 优先处理更明确的那一个；若两者都满足，按之前更高者处理
+      if (aWasAbove && (!bWasAbove || aPrevTop < bPrevTop)) {
+        // A 站到 B 头上
+        a.y = b.y - a.h;
+        if (a.vy > 0) a.vy = 0;
+        a.onGround = true;
+        a.jumpCount = 0;
+        return;
+      }
+      if (bWasAbove && (!aWasAbove || bPrevTop < aPrevTop)) {
+        // B 站到 A 头上
+        b.y = a.y - b.h;
+        if (b.vy > 0) b.vy = 0;
+        b.onGround = true;
+        b.jumpCount = 0;
+        return;
+      }
+
+      // 兜底：轻微分离，避免卡在一起（不做强推）
+      // 将水平重叠最小化：把后进入者轻推开
+      const push = 2;
+      if (a._prev.x < b._prev.x) a.x -= push; else a.x += push;
+    }
+
+    function updatePlayer(p, scale, input, L){
+      if (failed || won) return;
+      p._prev.x = p.x;
+      p._prev.y = p.y;
+
+      const solids = getSolids(L);
+
+      // crouch (S / ↓): only on ground; shrink hitbox
+      const wantCrouch = !!input.down;
+      if (wantCrouch && p.onGround) {
+        if (!p.crouching) {
+          const oldH = p.h;
+          const newH = p.crouchH;
+          p.h = newH;
+          p.y += (oldH - newH); // keep feet planted
+          p.crouching = true;
+        }
+      } else {
+        if (p.crouching) {
+          // try stand up; if head hits ceiling, keep crouching
+          const oldH = p.h;
+          const newH = p.standH;
+          const test = { x: p.x, y: p.y - (newH - oldH), w: p.w, h: newH };
+          if (!overlapsAnySolid(test, solids)) {
+            p.y -= (newH - oldH);
+            p.h = newH;
+            p.crouching = false;
+          }
+        }
+      }
+
+      // horizontal input
+      const MOVE = getMOVE();
+      if (input.left) p.vx -= MOVE * scale;
+      if (input.right) p.vx += MOVE * scale;
+      if (input.left && !input.right) p.facing = -1;
+      if (input.right && !input.left) p.facing = 1;
+      p.vx *= Math.pow(FRICTION, scale);
+      const maxV = 1.5 + MOVE * 2.6; // 随设置变化
+      p.vx = clamp(p.vx, -maxV, maxV);
+
+      // double jump: press jump twice -> second jump higher
+      const jumpDown = !!input.jump;
+      const justPressed = jumpDown && !p._jumpWasDown;
+      p._jumpWasDown = jumpDown;
+      if (p.onGround) p.jumpCount = 0;
+      if (justPressed) {
+        if (p.onGround || p.jumpCount < 2) {
+          const isSecond = !p.onGround && p.jumpCount === 1;
+          p.vy = -(isSecond ? JUMP * 1.35 : JUMP);
+          p.onGround = false;
+          p.jumpCount++;
+          sfxJump(p.kind);
+        }
+      }
+
+      // gravity
+      p.vy += GRAVITY * scale;
+      p.vy = clamp(p.vy, -30, MAX_FALL);
+
+      // integrate
+      p.x += p.vx * scale;
+      p.y += p.vy * scale;
+
+      // boundaries
+      p.x = clamp(p.x, 18, W - 18 - p.w);
+      if (p.y > H + 120) {
+        failed = true;
+        sfxFail();
+        openEndOverlay('失败了', '你掉下去了。按“重开本关”或按 R 继续。', false);
+        return;
+      }
+
+      // collisions with solids
+      p.onGround = false;
+      for (const s of solids) {
+        const hit = resolveAABB(p, s);
+        if (hit.hit && hit.fromTop) p.onGround = true;
+      }
+    }
+
+    function updatePortals(p, L, scale){
+      if (!L.portals || L.portals.length === 0) return;
+      p.portalCooldown = Math.max(0, (p.portalCooldown || 0) - (scale * 16.67) / 1000);
+      if (p.portalCooldown > 0) return;
+      for (const pt of L.portals) {
+        if (!rectsOverlap(p, pt)) continue;
+        const target = L.portals.find(x => x.id === pt.to);
+        if (!target) continue;
+        // teleport to target center, keep feet aligned
+        p.x = target.x + target.w/2 - p.w/2;
+        p.y = target.y + target.h - p.h;
+        p.vx *= 0.2;
+        p.vy = Math.min(p.vy, 2);
+        p.portalCooldown = 0.6;
+        // small whoosh sfx
+        playTone({ type:'sine', f0: 880, f1: 440, dur:0.10, gain:0.06, curve:'lin' });
+        break;
+      }
+    }
+
+    function collectGems(L){
+      for (const g of L.gems) {
+        if (g.taken) continue;
+        const who = g.for === 'fire' ? players.fire : players.water;
+        const gemRect = { x: g.x - g.r, y: g.y - g.r, w: g.r * 2, h: g.r * 2 };
+        if (rectsOverlap(who, gemRect)) {
+          g.taken = true;
+          who.gems++;
+          sfxGem(g.for);
+          if (g.for === 'fire') fireGemsEl.textContent = String(who.gems);
+          else waterGemsEl.textContent = String(who.gems);
+        }
+      }
+    }
+
+    function checkHazards(p, L){
+      for (const hz of L.hazards) {
+        if (!rectsOverlap(p, hz)) continue;
+        if (hz.type === 'spike') return true;
+        // 规则升级：冰娃不能碰红色(火)陷阱；火娃不能碰蓝色(冰)陷阱
+        if (hz.type === 'lava') return p.kind !== 'fire';
+        if (hz.type === 'water') return p.kind !== 'water';
+      }
+      return false;
+    }
+
+    // ---------- Render ----------
+    function drawRoundedRect(x,y,w,h,r,fill,stroke){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.lineTo(x+w-r,y);
+      ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+      ctx.lineTo(x+w,y+h-r);
+      ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+      ctx.lineTo(x+r,y+h);
+      ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+      ctx.lineTo(x,y+r);
+      ctx.quadraticCurveTo(x,y,x+r,y);
+      ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+    }
+
+    // 地窖迷宫背景（砖墙 pattern）
+    let dungeonPattern = null;
+    function getDungeonPattern(){
+      if (dungeonPattern) return dungeonPattern;
+      const p = document.createElement('canvas');
+      p.width = 160;
+      p.height = 160;
+      const c = p.getContext('2d');
+      // base stone
+      c.fillStyle = '#0b141d';
+      c.fillRect(0,0,p.width,p.height);
+
+      // brick grid
+      const brickW = 34, brickH = 18;
+      for (let y=0; y<p.height; y+=brickH){
+        const offset = ((y/brickH)|0) % 2 === 0 ? 0 : brickW/2;
+        for (let x=-brickW; x<p.width+brickW; x+=brickW){
+          const bx = x + offset;
+          const by = y;
+          const shade = 16 + ((x+y) % 10);
+          c.fillStyle = `rgb(${12+shade},${16+shade},${24+shade})`;
+          roundRect(c, bx+2, by+2, brickW-4, brickH-4, 4);
+          c.fill();
+          // cracks
+          c.strokeStyle = 'rgba(0,0,0,0.28)';
+          c.lineWidth = 1;
+          c.beginPath();
+          c.moveTo(bx+6, by+brickH/2);
+          c.lineTo(bx+brickW-8, by+brickH/2 + ((x+y)&1 ? 2 : -2));
+          c.stroke();
+        }
+      }
+      // moss / damp
+      c.globalAlpha = 0.18;
+      c.fillStyle = '#22c55e';
+      for (let i=0;i<18;i++){
+        const rx = Math.random()*p.width;
+        const ry = Math.random()*p.height;
+        const rr = 14 + Math.random()*22;
+        const grd = c.createRadialGradient(rx,ry,0,rx,ry,rr);
+        grd.addColorStop(0,'rgba(34,197,94,0.35)');
+        grd.addColorStop(1,'rgba(34,197,94,0)');
+        c.fillStyle = grd;
+        c.beginPath(); c.arc(rx,ry,rr,0,Math.PI*2); c.fill();
+      }
+      c.globalAlpha = 1;
+
+      dungeonPattern = ctx.createPattern(p, 'repeat');
+      return dungeonPattern;
+    }
+    function roundRect(c, x, y, w, h, r){
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.lineTo(x + w - r, y);
+      c.quadraticCurveTo(x + w, y, x + w, y + r);
+      c.lineTo(x + w, y + h - r);
+      c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      c.lineTo(x + r, y + h);
+      c.quadraticCurveTo(x, y + h, x, y + h - r);
+      c.lineTo(x, y + r);
+      c.quadraticCurveTo(x, y, x + r, y);
+      c.closePath();
+    }
+
+    function render(){
+      const L = levels[levelIndex];
+      ctx.clearRect(0,0,W,H);
+      // pixel sprite crisp
+      ctx.imageSmoothingEnabled = false;
+      // dungeon background
+      ctx.save();
+      ctx.fillStyle = getDungeonPattern();
+      ctx.fillRect(0,0,W,H);
+      // vignette
+      const vg = ctx.createRadialGradient(W/2,H/2,120,W/2,H/2,Math.max(W,H)*0.75);
+      vg.addColorStop(0,'rgba(0,0,0,0)');
+      vg.addColorStop(1,'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0,0,W,H);
+      // webs & spiders overlay (spooky)
+      drawWebsAndSpiders(performance.now() / 1000);
+      ctx.restore();
+
+      // soft particles
+      drawBgGlow();
+
+      // solids
+      for (const s of L.solids) drawPlatform(s, false);
+      for (const ds of L.dynamicSolids) {
+        if (ds._enabledNow) drawPlatform(ds.rect, true);
+      }
+
+      // hazards
+      for (const hz of L.hazards) drawHazard(hz);
+      // portals
+      if (L.portals) for (const pt of L.portals) drawPortal(pt);
+
+      // buttons
+      for (const b of L.buttons) drawButton(b);
+
+      // doors
+      for (const d of L.doors) drawDoor(d);
+
+      // gems
+      for (const gem of L.gems) drawGem(gem);
+
+      // monsters
+      drawMonsters();
+
+      // players
+      if (!players.fire.dead) drawPlayer(players.fire);
+      if (!players.water.dead) drawPlayer(players.water);
+      // attack hitboxes (visual)
+      drawAttackHitbox(players.fire);
+      drawAttackHitbox(players.water);
+
+      // label
+      drawLevelTag(L.name);
+
+      // ambience levels based on whether hazards exist in this level
+      if (audioState.unlocked) {
+        const hasFire = L.hazards.some(h => h.type === 'lava');
+        const hasIce = L.hazards.some(h => h.type === 'water');
+        if (hasFire) startFireAmbience();
+        if (hasIce) startIceAmbience();
+        // scale with count
+        const fireAmt = hasFire ? Math.min(1, L.hazards.filter(h => h.type === 'lava').length / 5) : 0;
+        const iceAmt = hasIce ? Math.min(1, L.hazards.filter(h => h.type === 'water').length / 5) : 0;
+        setFireAmbienceLevel(fireAmt);
+        setIceAmbienceLevel(iceAmt);
+      }
+    }
+
+    function drawAttackHitbox(p){
+      if (!p._attackHitbox) return;
+      ctx.save();
+      ctx.globalAlpha = 0.20;
+      ctx.fillStyle = p.kind === 'fire' ? 'rgba(255,107,107,0.9)' : 'rgba(78,168,222,0.9)';
+      drawRoundedRect(p._attackHitbox.x, p._attackHitbox.y, p._attackHitbox.w, p._attackHitbox.h, 8, ctx.fillStyle, null);
+      ctx.restore();
+    }
+
+    function drawWebsAndSpiders(t){
+      // corner webs
+      ctx.save();
+      // 蜘蛛网加深：更暗更粗一点
+      ctx.globalAlpha = 0.38;
+      ctx.strokeStyle = 'rgba(160,160,160,0.85)';
+      ctx.lineWidth = 1;
+      function webCorner(x0,y0,dirX,dirY){
+        const r = 120;
+        for (let i=1;i<=6;i++){
+          const a = (i/6) * (Math.PI/2);
+          const x = x0 + dirX * Math.cos(a) * r;
+          const y = y0 + dirY * Math.sin(a) * r;
+          ctx.beginPath();
+          ctx.moveTo(x0,y0);
+          ctx.lineTo(x,y);
+          ctx.stroke();
+        }
+        for (let k=1;k<=4;k++){
+          const rr = r * (k/5);
+          ctx.beginPath();
+          for (let i=0;i<=12;i++){
+            const a = (i/12) * (Math.PI/2);
+            const x = x0 + dirX * Math.cos(a) * rr;
+            const y = y0 + dirY * Math.sin(a) * rr;
+            if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.stroke();
+        }
+      }
+      webCorner(18, 18, 1, 1);
+      webCorner(W-18, 18, -1, 1);
+      webCorner(18, H-18, 1, -1);
+      webCorner(W-18, H-18, -1, -1);
+      ctx.restore();
+
+      // hanging webs
+      ctx.save();
+      ctx.globalAlpha = 0.30;
+      ctx.strokeStyle = 'rgba(150,150,150,0.85)';
+      ctx.lineWidth = 1;
+      for (let i=0;i<5;i++){
+        const x = 140 + i*160;
+        const sway = Math.sin(t*0.8 + i)*6;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.quadraticCurveTo(x + sway, 60, x + sway*0.6, 120);
+        ctx.stroke();
+        // small web fan
+        ctx.beginPath();
+        ctx.arc(x + sway*0.6, 120, 22, Math.PI, Math.PI*2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // spiders (small)
+      ctx.save();
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+      ctx.lineWidth = 1;
+      const spiders = [
+        {x: 160, y: 118, phase: 0.2},
+        {x: 520, y: 122, phase: 1.4},
+        {x: 820, y: 116, phase: 2.1},
+      ];
+      for (const s of spiders){
+        const bob = Math.sin(t*1.2 + s.phase)*3;
+        const cx = s.x;
+        const cy = s.y + bob;
+        // body
+        ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, cy+7, 4.5, 0, Math.PI*2); ctx.fill();
+        // legs
+        for (let k=0;k<4;k++){
+          const off = (k-1.5)*3;
+          ctx.beginPath();
+          ctx.moveTo(cx-2, cy+2+off);
+          ctx.lineTo(cx-12, cy-2+off);
+          ctx.lineTo(cx-18, cy+4+off);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx+2, cy+2+off);
+          ctx.lineTo(cx+12, cy-2+off);
+          ctx.lineTo(cx+18, cy+4+off);
+          ctx.stroke();
+        }
+        // thread
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = 'rgba(150,150,150,0.65)';
+        ctx.beginPath();
+        ctx.moveTo(cx, 0);
+        ctx.lineTo(cx, cy-6);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    function drawBgGlow(){
+      // static glows for vibe
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      const glows = [
+        {x:160,y:120,r:120,c:'rgba(34,197,94,0.10)'},
+        {x:820,y:160,r:140,c:'rgba(168,85,247,0.10)'},
+        {x:720,y:420,r:150,c:'rgba(78,168,222,0.10)'},
+        {x:260,y:420,r:160,c:'rgba(255,107,107,0.08)'},
+      ];
+      for (const a of glows) {
+        const grd = ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,a.r);
+        grd.addColorStop(0, a.c);
+        grd.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawPlatform(s, isDynamic){
+      const fill = isDynamic ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.08)';
+      const stroke = isDynamic ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.14)';
+      drawRoundedRect(s.x, s.y, s.w, s.h, 10, fill, stroke);
+      // subtle top highlight
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.fillRect(s.x + 6, s.y + 4, Math.max(0, s.w - 12), 2);
+      ctx.restore();
+    }
+
+    function drawHazard(hz){
+      if (hz.type === 'spike') {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        const n = Math.max(1, Math.floor(hz.w / 10));
+        for (let i=0;i<n;i++){
+          const x = hz.x + i*(hz.w/n);
+          ctx.beginPath();
+          ctx.moveTo(x, hz.y + hz.h);
+          ctx.lineTo(x + (hz.w/n)/2, hz.y);
+          ctx.lineTo(x + (hz.w/n), hz.y + hz.h);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+        return;
+      }
+      const isLava = hz.type === 'lava';
+      const t = performance.now() / 1000;
+      if (isLava) drawFireTrap(hz, t);
+      else drawIceTrap(hz, t);
+    }
+
+    function drawPortal(pt){
+      const t = performance.now() / 1000;
+      ctx.save();
+      const pulse = 0.5 + 0.5 * Math.sin(t * 3.2 + (pt.id === 'A' ? 0 : 1.3));
+      const glow = `rgba(168,85,247,${0.25 + pulse*0.25})`;
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 18;
+      const grad = ctx.createLinearGradient(pt.x, pt.y, pt.x, pt.y + pt.h);
+      grad.addColorStop(0, `rgba(168,85,247,${0.55 + pulse*0.15})`);
+      grad.addColorStop(1, `rgba(34,197,94,${0.35 + (1-pulse)*0.15})`);
+      drawRoundedRect(pt.x, pt.y, pt.w, pt.h, 14, grad, 'rgba(255,255,255,0.14)');
+      ctx.shadowBlur = 0;
+      // swirl lines
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = 1;
+      for (let i=0;i<3;i++){
+        ctx.beginPath();
+        const yy = pt.y + 10 + i*14;
+        ctx.moveTo(pt.x + 6, yy);
+        ctx.quadraticCurveTo(pt.x + pt.w/2, yy + (pulse-0.5)*12, pt.x + pt.w - 6, yy);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 0.75;
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '900 13px Nunito, sans-serif';
+      ctx.fillText('传', pt.x + 8, pt.y + pt.h - 10);
+      ctx.restore();
+    }
+
+    function drawFireTrap(hz, t){
+      // base molten bed
+      ctx.save();
+      const base = ctx.createLinearGradient(hz.x, hz.y, hz.x, hz.y + hz.h);
+      base.addColorStop(0, 'rgba(255,170,60,0.75)');
+      base.addColorStop(0.55,'rgba(255,70,50,0.78)');
+      base.addColorStop(1, 'rgba(180,20,10,0.78)');
+      ctx.shadowColor = 'rgba(255,80,50,0.45)';
+      ctx.shadowBlur = 18;
+      drawRoundedRect(hz.x, hz.y, hz.w, hz.h, 10, base, 'rgba(255,255,255,0.10)');
+      ctx.shadowBlur = 0;
+
+      // animated flames (tongues)
+      const flameCount = Math.max(6, Math.floor(hz.w / 22));
+      for (let i=0;i<flameCount;i++){
+        const fx = hz.x + (i + 0.5) * (hz.w / flameCount);
+        const phase = i * 0.7;
+        const flick = 0.5 + 0.5 * Math.sin(t * 6.0 + phase);
+        const h = hz.h * (0.9 + flick * 1.6);
+        const w = (hz.w / flameCount) * (0.45 + flick * 0.35);
+        const topY = hz.y - h * 0.55;
+        const grad = ctx.createRadialGradient(fx, hz.y + hz.h*0.2, 2, fx, hz.y, h);
+        grad.addColorStop(0, 'rgba(255,245,180,0.75)');
+        grad.addColorStop(0.35,'rgba(255,180,70,0.75)');
+        grad.addColorStop(0.75,'rgba(255,70,50,0.55)');
+        grad.addColorStop(1, 'rgba(255,70,50,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(fx, topY);
+        ctx.quadraticCurveTo(fx + w, hz.y + hz.h*0.2, fx, hz.y + hz.h);
+        ctx.quadraticCurveTo(fx - w, hz.y + hz.h*0.2, fx, topY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // ember sparkles
+      ctx.globalAlpha = 0.55;
+      for (let i=0;i<10;i++){
+        const sx = hz.x + ((i*97) % 1000) / 1000 * hz.w;
+        const sy = hz.y - (Math.sin(t*2.6 + i)*0.5 + 0.5) * 28;
+        const r = 1 + (i % 3) * 0.6;
+        ctx.fillStyle = 'rgba(255,230,140,0.75)';
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill();
+      }
+
+      // label
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.font = '800 14px Nunito, sans-serif';
+      ctx.fillText('火', hz.x + 10, hz.y + hz.h - 6);
+      ctx.restore();
+    }
+
+    function drawIceTrap(hz, t){
+      ctx.save();
+      // base icy slab with moving shimmer
+      const base = ctx.createLinearGradient(hz.x, hz.y, hz.x + hz.w, hz.y + hz.h);
+      base.addColorStop(0,'rgba(180,220,255,0.50)');
+      base.addColorStop(0.45,'rgba(80,160,255,0.55)');
+      base.addColorStop(1,'rgba(30,110,220,0.55)');
+      ctx.shadowColor = 'rgba(80,160,255,0.35)';
+      ctx.shadowBlur = 16;
+      drawRoundedRect(hz.x, hz.y, hz.w, hz.h, 10, base, 'rgba(255,255,255,0.10)');
+      ctx.shadowBlur = 0;
+
+      // moving highlight band
+      const bandX = hz.x + ((t*0.25) % 1) * (hz.w + 80) - 80;
+      ctx.globalAlpha = 0.22;
+      const band = ctx.createLinearGradient(bandX, hz.y, bandX + 80, hz.y);
+      band.addColorStop(0,'rgba(255,255,255,0)');
+      band.addColorStop(0.5,'rgba(255,255,255,0.75)');
+      band.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle = band;
+      ctx.fillRect(hz.x, hz.y, hz.w, hz.h);
+
+      // cracks
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1;
+      const crackN = Math.max(2, Math.floor(hz.w / 90));
+      for (let i=0;i<crackN;i++){
+        const cx = hz.x + (i+0.5)*(hz.w/crackN);
+        const wig = Math.sin(t*1.3 + i)*3;
+        ctx.beginPath();
+        ctx.moveTo(cx, hz.y + 4);
+        ctx.lineTo(cx + wig, hz.y + hz.h*0.45);
+        ctx.lineTo(cx - wig*0.6, hz.y + hz.h - 4);
+        ctx.stroke();
+      }
+
+      // label
+      ctx.globalAlpha = 0.60;
+      ctx.fillStyle = 'rgba(255,255,255,0.80)';
+      ctx.font = '800 14px Nunito, sans-serif';
+      ctx.fillText('冰', hz.x + 10, hz.y + hz.h - 6);
+      ctx.restore();
+    }
+
+    function drawButton(b){
+      ctx.save();
+      const fill = b.pressed ? 'rgba(34,197,94,0.55)' : 'rgba(255,255,255,0.15)';
+      const stroke = b.pressed ? 'rgba(34,197,94,0.85)' : 'rgba(255,255,255,0.22)';
+      ctx.shadowColor = b.pressed ? 'rgba(34,197,94,0.35)' : 'rgba(0,0,0,0)';
+      ctx.shadowBlur = b.pressed ? 16 : 0;
+      drawRoundedRect(b.x, b.y, b.w, b.h, 6, fill, stroke);
+      ctx.restore();
+    }
+
+    function drawDoor(d){
+      ctx.save();
+      const isFire = d.kind === 'fire';
+      const fill = d.open
+        ? (isFire ? 'rgba(255,107,107,0.35)' : 'rgba(78,168,222,0.35)')
+        : 'rgba(255,255,255,0.08)';
+      const stroke = isFire ? 'rgba(255,107,107,0.65)' : 'rgba(78,168,222,0.65)';
+      ctx.shadowColor = d.open ? stroke : 'rgba(0,0,0,0)';
+      ctx.shadowBlur = d.open ? 16 : 0;
+      drawRoundedRect(d.x, d.y, d.w, d.h, 12, fill, stroke);
+      ctx.shadowBlur = 0;
+      // emblem
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = isFire ? 'rgba(255,107,107,0.9)' : 'rgba(78,168,222,0.9)';
+      ctx.beginPath();
+      ctx.arc(d.x + d.w/2, d.y + 18, 6, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawGem(g){
+      if (g.taken) return;
+      const isFire = g.for === 'fire';
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      const color = isFire ? 'rgba(255,209,102,0.95)' : 'rgba(167,139,250,0.95)';
+      const glow = isFire ? 'rgba(255,209,102,0.45)' : 'rgba(167,139,250,0.45)';
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 12;
+      // diamond
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(0, -g.r);
+      ctx.lineTo(g.r, 0);
+      ctx.lineTo(0, g.r);
+      ctx.lineTo(-g.r, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.moveTo(0, -g.r);
+      ctx.lineTo(g.r*0.35, -g.r*0.05);
+      ctx.lineTo(0, g.r*0.35);
+      ctx.lineTo(-g.r*0.35, -g.r*0.05);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPlayer(p){
+      ctx.save();
+      const isFire = p.kind === 'fire';
+      const base = isFire ? 'rgba(255,107,107,0.95)' : 'rgba(78,168,222,0.95)';
+      const stroke = isFire ? 'rgba(255,107,107,0.45)' : 'rgba(78,168,222,0.45)';
+      const face = 'rgba(255,255,255,0.92)';
+      const eye = 'rgba(10,10,10,0.85)';
+
+      const t = performance.now() / 1000;
+      const bob = Math.sin(t * 6 + (isFire ? 0.6 : 1.4)) * 1.2;
+
+      // soft shadow
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.beginPath();
+      ctx.ellipse(p.x + p.w/2, p.y + p.h + 2, p.w*0.55, 6, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // body
+      ctx.shadowColor = stroke;
+      ctx.shadowBlur = 16;
+      drawRoundedRect(p.x, p.y + bob, p.w, p.h, 12, base, 'rgba(255,255,255,0.18)');
+      ctx.shadowBlur = 0;
+
+      // 装备外观（购买后可带入关卡并穿戴在身上）
+      const hasSword = !!(profile && profile.equipped && profile.equipped.sword);
+      const hasArmor = !!(profile && profile.equipped && profile.equipped.armor);
+      if (hasArmor) {
+        // armor overlay: chest plate + shoulder pads
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        const y0 = p.y + bob;
+        const plate = ctx.createLinearGradient(p.x, y0, p.x + p.w, y0 + p.h);
+        plate.addColorStop(0, 'rgba(220,230,245,0.75)');
+        plate.addColorStop(0.5, 'rgba(160,180,210,0.85)');
+        plate.addColorStop(1, 'rgba(90,110,140,0.85)');
+        drawRoundedRect(p.x + 2, y0 + 10, p.w - 4, p.h - 14, 10, plate, 'rgba(255,255,255,0.22)');
+        ctx.globalAlpha = 0.55;
+        drawRoundedRect(p.x + 1, y0 + 8, 8, 10, 6, 'rgba(220,230,245,0.55)', null);
+        drawRoundedRect(p.x + p.w - 9, y0 + 8, 8, 10, 6, 'rgba(220,230,245,0.55)', null);
+        // belt
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = 'rgba(30,30,40,0.55)';
+        ctx.fillRect(p.x + 4, y0 + p.h - 10, p.w - 8, 3);
+        ctx.restore();
+      }
+      if (hasSword) {
+        // sword: draw near hand (based on facing)
+        ctx.save();
+        const y0 = p.y + bob;
+        const fx = p.facing >= 0 ? (p.x + p.w - 2) : (p.x + 2);
+        const fy = y0 + 18;
+        ctx.translate(fx, fy);
+        ctx.rotate((p.facing >= 0 ? 1 : -1) * -0.25);
+        ctx.globalAlpha = 0.9;
+        // blade
+        ctx.fillStyle = 'rgba(230,235,245,0.95)';
+        ctx.fillRect(-2, -18, 4, 18);
+        // edge highlight
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillRect(-1, -18, 1, 18);
+        ctx.globalAlpha = 0.95;
+        // guard
+        ctx.fillStyle = 'rgba(250,204,21,0.95)';
+        ctx.fillRect(-6, 0, 12, 2);
+        // handle
+        ctx.fillStyle = 'rgba(60,40,20,0.95)';
+        ctx.fillRect(-1, 2, 2, 6);
+        // pommel
+        ctx.fillStyle = 'rgba(250,204,21,0.95)';
+        ctx.beginPath(); ctx.arc(0, 9, 2.2, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+
+      // cute face
+      const cx = p.x + p.w/2;
+      const cy = p.y + bob + p.h/2 - 2;
+      ctx.fillStyle = face;
+      ctx.beginPath(); ctx.arc(cx - 5, cy - 6, 3.1, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + 5, cy - 6, 3.1, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = eye;
+      ctx.beginPath(); ctx.arc(cx - 5, cy - 6, 1.2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + 5, cy - 6, 1.2, 0, Math.PI*2); ctx.fill();
+
+      // smile
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(cx, cy + 2, 6, 0.15*Math.PI, 0.85*Math.PI);
+      ctx.stroke();
+
+      // tiny feet
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(p.x + 4, p.y + bob + p.h - 3, 6, 3);
+      ctx.fillRect(p.x + p.w - 10, p.y + bob + p.h - 3, 6, 3);
+      ctx.restore();
+    }
+
+    function drawLevelTag(name){
+      ctx.save();
+      ctx.font = '800 14px Nunito, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.82)';
+      ctx.shadowColor = 'rgba(0,0,0,0.45)';
+      ctx.shadowBlur = 10;
+      const text = `关卡 ${levelIndex+1} · ${name}`;
+      ctx.fillText(text, 22, 26);
+      ctx.restore();
+    }
+
+    // init
+    loadLevel(0);
+    canvas.focus();
+  </script>
+</body>
+</html>
